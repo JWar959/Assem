@@ -20,7 +20,7 @@ public:
     void PassI( );
 
     // Pass II - generate a translation
-   // void PassII( );
+    void PassII( );
 
     // Display the symbols in the symbol table.
     void DisplaySymbolTable();
@@ -28,11 +28,15 @@ public:
     // Run emulator on the translation.
     void RunProgramInEmulator() { m_emul.runProgram(); }
 
+    // Convert to opcode
+    int ConvertToOpcode(const string& opcode);
+
 private:
 
     FileAccess m_facc;	    // File Access object
     SymbolTable m_symtab;	// Symbol table object
     Instruction m_inst;	    // Instruction object
     emulator m_emul;        // Emulator object
+    int m_startingLocation;
 };
 

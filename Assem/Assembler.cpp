@@ -25,6 +25,26 @@ void Assembler::DisplaySymbolTable() {
 
 }
 
+// Returns the opcode number for the string label that its assosicated with
+int Assembler::ConvertToOpcode(const string& opcode) {
+
+    // Create a map to represent the two values, string and integer, that are assosciated with eachother
+    static map<string, int> opcodeTable = {
+
+        {"ADD", 1}, {"SUB", 2}, {"MULT", 3}, {"DIV", 4}, {"LOAD", 5}, {"STORE", 6},
+        {"READ", 7}, {"WRITE", 8}, {"B", 9}, {"BM", 10}, {"BZ", 11}, {"BP", 12},
+        {"HALT", 13}
+    };
+
+    if (opcodeTable.find(opcode) != opcodeTable.end()) {
+        return opcodeTable[opcode];
+    }
+
+    // If there is an invalid opcode, return -1 (fix this later)
+    return -1;
+
+}
+
 // Pass I establishes the location of the labels.  You will write better function comments according to the coding standards.
 void Assembler::PassI()
 {
@@ -42,6 +62,7 @@ void Assembler::PassI()
             return;
         }
 
+
         // line has the next line from the file to be read
         // check if the line is an org directive
         if (line.substr(0,3) == "org") {
@@ -58,6 +79,9 @@ void Assembler::PassI()
 
             // set loc based on org
             loc = stoi(operand);
+
+            // Give a member variable the starting location to give ability to share with PassII later
+            m_startingLocation = loc;
             continue;
         }
 
@@ -85,6 +109,101 @@ void Assembler::PassI()
             loc = m_inst.LocationNextInstruction(loc);
         }
     }
+
+// Pass II will read over the source file for a second time, generating machine code and checks for
+// unresolved symbols
+void Assembler::PassII() {
+
+    // Rewind the file for Pass II
+    m_facc.rewind();
+    cout << "Testing if file starts reading from the beginning..." << endl;
+
+    string line;
+    if (m_facc.GetNextLine(line)) {
+        cout << "First line: " << line << endl;
+    }
+    else {
+        cout << "Failed to read the first line after rewinding." << endl;
+    }
+
+    // Temporary tests for ConvertToOpcode
+    cout << "Testing ConvertToOpcode..." << std::endl;
+    cout << "Opcode for ADD: " << ConvertToOpcode("ADD") << std::endl;
+    cout << "Opcode for HALT: " << ConvertToOpcode("HALT") << std::endl;
+    cout << "Opcode for INVALID: " << ConvertToOpcode("INVALID") << std::endl;
+
+    // Example of parsing a line and testing GetOpCode
+    cout << "Testing GetOpCode..." << std::endl;
+    m_inst.ParseInstruction("LOAD X");
+    cout << "Parsed opcode: " << m_inst.GetOpCode() << std::endl;
+    m_inst.ParseInstruction("STORE Y");
+    cout << "Parsed opcode: " << m_inst.GetOpCode() << std::endl;
+
+
+    // Test for the symbol table returning correct address values
+    
+    cout << "Testing GetAddress..." << endl;
+    string testOperand = "x"; // Replace with actual operand expected to exist in the symbol table
+    int address = m_symtab.GetAddress(testOperand);
+    cout << "Address retrieved for operand '" << testOperand << "': " << address << endl;
+    testOperand = "y";
+    address = m_symtab.GetAddress(testOperand);
+    cout << "Address retrieved for operand '" << testOperand << "': " << address << endl;
+
+    
+    int loc = m_startingLocation;  // Initialize to the start location from Pass I
+
+    while (true) {
+
+        // Read the next line from the source file.
+        string line;
+
+        // Rewind the file
+
+        if (!m_facc.GetNextLine(line)) {
+
+            // If there are no more lines, we are missing an end statement.
+            // We will let this error be reported by Pass II.
+            return;
+        }
+
+
+        // Parse the line to get opcode and operand
+        Instruction::InstructionType type = m_inst.ParseInstruction(line);
+
+        if (type == Instruction::ST_MachineLanguage || type == Instruction::ST_AssemblerInstr) {
+            // Convert to machine code
+            int opcode = ConvertToOpcode(m_inst.GetOpCode());
+            
+            if(int operand = m_inst.isNumericOperand()){
+                
+                // If we are here, then the operand has a numeric value
+                m_inst.GetOperandValue();
+            }
+            else {
+
+                // If we are here, than the operand does not have a numeric value, so we need to 
+                // find the address by using the symbol table
+                m_symtab.GetAddress(m_inst.GetOperand());
+            }  
+
+
+            /*
+
+            // Generate the machine instruction in the form: <opcode><operand>
+            int machineInstruction = GenerateMachineCode(opcode, operand);
+
+            // Output the formatted line
+            std::cout << std::setw(5) << loc << std::setw(10) << machineInstruction
+                << std::setw(20) << line << std::endl;
+
+            loc = m_inst.LocationNextInstruction(loc);
+
+            */
+            
+        }
+    }
+}
 
 
 

@@ -30,6 +30,7 @@ Instruction::InstructionType Instruction::ParseInstruction(string a_buff) {
     return m_OpCode.empty() ? ST_Comment : ST_AssemblerInstr;
 
 }
+
 string Instruction::RemoveComment(string line) {
     size_t pos = line.find(';');
     if (pos == string::npos)
@@ -37,6 +38,29 @@ string Instruction::RemoveComment(string line) {
         return line;
     }
     return line.erase(pos);  // Note: erase changed line also.  That is why it was passed by value.
+}
+
+string Instruction::GetOpCode() {
+    return this->m_OpCode;
+}
+
+bool Instruction::isNumericOperand() const {
+
+    // Return if the operand is numeric or not
+    return this->m_IsNumericOperand;
+
+}
+
+int Instruction::GetOperandValue() const {
+
+    // Return members operand numeric value
+    return this->m_OperandNumValue;
+
+}
+
+string Instruction::GetOperand() const {
+   // Return the string value for the operand
+    return this->m_Operand;
 }
 
 void Instruction::GetLabelOpcodeEtc(const string& a_buff) {
@@ -60,5 +84,6 @@ void Instruction::GetLabelOpcodeEtc(const string& a_buff) {
         m_Operand.clear();  // No operand
     }
 }
+
 
 

@@ -24,6 +24,8 @@ public:
     // Lookup a symbol in the symbol table.
     bool LookupSymbol( string &a_symbol, int &a_loc );
 
+    int GetAddress(const string & operand);
+
 private:
 
     // This is the actual symbol table.  The symbol is the key to the map.

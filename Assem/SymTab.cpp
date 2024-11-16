@@ -17,6 +17,21 @@ void SymbolTable::DisplaySymbolTable() {
     }
 }
 
+int SymbolTable::GetAddress(const string& operand) {
+    
+    // Create an iterator and have it search for the string value
+    auto it = m_symbolTable.find(operand);
+
+    if (it == m_symbolTable.end()) {
+        // If we are here, then a matching value was not found
+        return -1;
+    }
+
+     // return the iterator
+    return it->second;
+
+}
+
 /*
 NAME
 

@@ -48,5 +48,6 @@ void FileAccess::rewind( )
     // Clean all file flags and go back to the beginning of the file.
     m_sfile.clear();
     m_sfile.seekg( 0, ios::beg );
+    cout << "File was rewound successfully" << endl;
 }
     

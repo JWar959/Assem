@@ -17,7 +17,7 @@ int main( int argc, char *argv[] )
     assem.DisplaySymbolTable();
 
     // Output the symbol table and the translation.
-    // VICVIC assem.PassII( );
+    assem.PassII( );
     
     // Run the emulator on the Quack3200 program that was generated in Pass II.
     // VICVICassem.RunProgramInEmulator();

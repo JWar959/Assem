@@ -49,6 +49,20 @@ public:
         return !m_Label.empty();
     };
 
+    // To return the opcode for PassII
+    string GetOpCode();
+
+    // to return if the operand is numeric or not
+    bool isNumericOperand() const;
+
+    // Return the Numeric Operand Value
+    int GetOperandValue() const;
+
+    // Return the string value of the operand
+    string GetOperand() const;
+
+
+
 
 private:
 
