@@ -5,8 +5,8 @@
 #ifndef _ERRORS_H
 #define _ERRORS_H
 
-#include <string>
-#include <vector>
+#include "stdafx.h"
+
 using namespace std;
 
 class Errors {
@@ -24,15 +24,29 @@ public:
 		m_ErrorMsgs.push_back(a_emsg);
         m_WasErrorMessages = true;
 	}
-    static bool WasThereErrors() { return m_WasErrorMessages; }
+
+    static bool WasThereErrors(){ 
+        
+        return m_WasErrorMessages; 
+    
+    }
 
     // Displays the collected error message.
     static void DisplayErrors()
     {
-        // Display errors  Please add the code.
+        if (m_ErrorMsgs.empty()) {
+            cout << "No errors reported." << endl;
+            return;
+        }
 
-        // Errase error messages
+        cout << "Error Messages:" << endl;
+        for (const auto& msg : m_ErrorMsgs) {
+            cout << " - " << msg << endl;
+        }
+
+        // Clear error messages after displaying.
         m_ErrorMsgs.clear();
+        m_WasErrorMessages = false;
     }
 
 private:

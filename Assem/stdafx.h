@@ -13,7 +13,7 @@
 
 // TODO: reference additional headers your program requires here
 // Standard include files.
-#include <stdio.h>
+
 #include <iostream>
 #include <stdlib.h>
 #include <string>
@@ -23,5 +23,6 @@
 #include <format>
 #include <sstream>
 #include <iomanip>
-
+#include <algorithm>
+#include <vector>
 using namespace std;

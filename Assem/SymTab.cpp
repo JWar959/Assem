@@ -32,6 +32,21 @@ int SymbolTable::GetAddress(const string& operand) {
 
 }
 
+bool SymbolTable::LookupSymbol(string& a_symbol, int& a_loc) {
+    // Search for the symbol in the symbol table.
+    auto it = m_symbolTable.find(a_symbol);
+
+    // If the symbol is found, set the location and return true.
+    if (it != m_symbolTable.end()) {
+        a_loc = it->second; // Retrieve the location.
+        return true; // Symbol was found.
+    }
+
+    // If the symbol is not found, set the location to an invalid value and return false.
+    a_loc = -1;
+    return false;
+}
+
 /*
 NAME
 

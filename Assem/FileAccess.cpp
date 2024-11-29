@@ -3,7 +3,6 @@
 //
 #include "stdafx.h"
 #include "FileAccess.h"
-#include <iostream>
 using namespace std;
 
 // Don't forget to comment the function headers.

@@ -6,6 +6,7 @@
 #include "Assembler.h"
 #include "Errors.h"
 
+
 // Constructor for the assembler.  Note: we are passing argc and argv to the file access constructor.
 // See main program.  
 Assembler::Assembler( int argc, char *argv[] )
@@ -62,10 +63,16 @@ void Assembler::PassI()
             return;
         }
 
+
+        string trimmedLine = line;
+        trimmedLine.erase(0, trimmedLine.find_first_not_of(" \t")); // Remove leading whitespace.
+        transform(trimmedLine.begin(), trimmedLine.end(), trimmedLine.begin(), ::tolower);
         // Check if the line is an org directive
-        if (line.substr(0, 3) == "org")
+        cout << "Processing line in Pass I: " << line << endl;
+
+        if (trimmedLine.substr(0, 3) == "org")
         {
-            istringstream parseLine(line);
+            istringstream parseLine(trimmedLine);
             string directive, operand;
             parseLine >> directive >> operand;
 
@@ -123,105 +130,84 @@ void Assembler::PassI()
 
 // Pass II will read over the source file for a second time, generating machine code and checks for
 // unresolved symbols
-void Assembler::PassII() {
 
-    // Rewind the file for Pass II
+void Assembler::PassII() {
     m_facc.rewind();
-    //cout << "Testing if file starts reading from the beginning..." << endl;
+    int loc = m_startingLocation;
+
+    cout << "Translation of Program:\n" << endl;
+    cout << "Location    Contents    Original Statement\n" << endl;
 
     string line;
-    /*
-    if (m_facc.GetNextLine(line)) {
-        cout << "First line: " << line << endl;
-    }
-    else {
-        cout << "Failed to read the first line after rewinding." << endl;
-    }
-    */
-    /*
-    
-    // Temporary tests for ConvertToOpcode
-    cout << "Testing ConvertToOpcode..." << std::endl;
-    cout << "Opcode for ADD: " << ConvertToOpcode("ADD") << std::endl;
-    cout << "Opcode for HALT: " << ConvertToOpcode("HALT") << std::endl;
-    cout << "Opcode for INVALID: " << ConvertToOpcode("INVALID") << std::endl;
-
-    // Example of parsing a line and testing GetOpCode
-    cout << "Testing GetOpCode..." << std::endl;
-    m_inst.ParseInstruction("LOAD X");
-    cout << "Parsed opcode: " << m_inst.GetOpCode() << std::endl;
-    m_inst.ParseInstruction("STORE Y");
-    cout << "Parsed opcode: " << m_inst.GetOpCode() << std::endl;
-    */
-
-    // Test for the symbol table returning correct address values
-    
-    /*
-    cout << "Testing GetAddress..." << endl;
-    string testOperand = "x"; // Replace with actual operand expected to exist in the symbol table
-    int address = m_symtab.GetAddress(testOperand);
-    cout << "Address retrieved for operand '" << testOperand << "': " << address << endl;
-    testOperand = "y";
-    address = m_symtab.GetAddress(testOperand);
-    cout << "Address retrieved for operand '" << testOperand << "': " << address << endl;
-    */
-    
-    int loc = m_startingLocation;  // Initialize to the start location from Pass I
-
     while (true) {
-
-        // Read the next line from the source file.
-        string line;
-
-        // Rewind the file
-
         if (!m_facc.GetNextLine(line)) {
-
-            // If there are no more lines, we are missing an end statement.
-            // We will let this error be reported by Pass II.
-            return;
+            break; // End of file.
         }
 
-
-        // Parse the line to get opcode and operand
         Instruction::InstructionType type = m_inst.ParseInstruction(line);
 
-        if (type == Instruction::ST_MachineLanguage || type == Instruction::ST_AssemblerInstr) {
-            // Convert to machine code
-            int opcode = ConvertToOpcode(m_inst.GetOpCode());
-            
-            if(int operand = m_inst.isNumericOperand()){
-                
-                // If we are here, then the operand has a numeric value
-                m_inst.GetOperandValue();
-            }
-            else {
-
-                // If we are here, than the operand does not have a numeric value, so we need to 
-                // find the address by using the symbol table
-                m_symtab.GetAddress(m_inst.GetOperand());
-            }  
-
-
-            
-            /*
-            // Generate the machine instruction in the form: <opcode><operand>
-            int machineInstruction = GenerateMachineCode(opcode, operand);
-
-            // Output the formatted line
-            std::cout << std::setw(5) << loc << std::setw(10) << machineInstruction
-                << std::setw(20) << line << std::endl;
-
-            loc = m_inst.LocationNextInstruction(loc);
-
-            
-            */
+        // Skip comments and blank lines.
+        if (type == Instruction::ST_Comment) {
+            cout << setw(40) << line << endl;
+            continue;
         }
 
-        
+        // Process assembler directives.
+        if (type == Instruction::ST_AssemblerInstr) {
+            string opcode = m_inst.GetOpCode();
+
+            if (opcode == "dc") {
+                int value = stoi(m_inst.GetOperand());
+                cout << setw(10) << loc << setw(10) << value << setw(30) << line << endl;
+                loc++; // Increment by 1 for dc
+            }
+            else if (opcode == "ds") {
+                int reserve = stoi(m_inst.GetOperand());
+                cout << setw(10) << loc << setw(10) << "" << setw(30) << line << endl;
+                loc += reserve; // Increment by the storage size
+            }
+            continue;
+        }
+
+        // Process machine instructions.
+        if (type == Instruction::ST_MachineLanguage) {
+            string opcode = m_inst.GetOpCode();
+            transform(opcode.begin(), opcode.end(), opcode.begin(), ::toupper);
+
+            int opcodeValue = ConvertToOpcode(opcode);
+            if (opcodeValue == -1) {
+                Errors::RecordError("Invalid opcode: " + opcode);
+                cout << "Error: Invalid opcode -> " << opcode << endl;
+                continue;
+            }
+
+            int operand = m_inst.isNumericOperand() ? m_inst.GetOperandValue()
+                : m_symtab.GetAddress(m_inst.GetOperand());
+
+            if (operand == -1) {
+                Errors::RecordError("Undefined symbol: " + m_inst.GetOperand());
+                cout << "Error: Undefined symbol -> " << m_inst.GetOperand() << endl;
+                continue;
+            }
+
+            int machineInstruction = opcodeValue * 1000 + operand;
+
+            cout << setw(10) << loc << setw(10) << machineInstruction << setw(30) << line << endl;
+            loc++; // Increment by 1 for each machine instruction
+        }
+
+        if (type == Instruction::ST_End) {
+            cout << setw(40) << "end" << endl;
+            break;
+        }
     }
-    
 }
+
+
+
+
+
+
 
 
 
