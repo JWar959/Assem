@@ -48,67 +48,78 @@ int Assembler::ConvertToOpcode(const string& opcode) {
 // Pass I establishes the location of the labels.  You will write better function comments according to the coding standards.
 void Assembler::PassI()
 {
-    int loc = 0;        // Tracks the location of the instructions to be generated.
+    int loc = 0; // Tracks the location of the instructions to be generated.
 
     // Successively process each line of source code.
-    while (true) {
-
+    while (true)
+    {
         // Read the next line from the source file.
         string line;
-        if (!m_facc.GetNextLine(line)) {
-
+        if (!m_facc.GetNextLine(line))
+        {
             // If there are no more lines, we are missing an end statement.
             // We will let this error be reported by Pass II.
             return;
         }
 
-
-        // line has the next line from the file to be read
-        // check if the line is an org directive
-        if (line.substr(0,3) == "org") {
-
-            // create an istringstream intialized to the line returned from getline
+        // Check if the line is an org directive
+        if (line.substr(0, 3) == "org")
+        {
             istringstream parseLine(line);
-
-            // create two strings to place the directive and operand into
-            string directive,
-                operand;
-
-            // Place the istringstream contents into the string variables
+            string directive, operand;
             parseLine >> directive >> operand;
 
-            // set loc based on org
             loc = stoi(operand);
+            m_startingLocation = loc; // Record starting location for Pass II.
 
-            // Give a member variable the starting location to give ability to share with PassII later
-            m_startingLocation = loc;
+            cout << "Set starting location to: " << loc << " (org directive)" << endl;
             continue;
         }
 
+        // Parse the line and get the instruction type.
+        Instruction::InstructionType st = m_inst.ParseInstruction(line);
 
-            // Parse the line and get the instruction type.
-            Instruction::InstructionType st = m_inst.ParseInstruction(line);
+        // If this is an end statement, there is nothing left to do in Pass I.
+        if (st == Instruction::ST_End)
+            return;
 
-            // If this is an end statement, there is nothing left to do in pass I.
-            // Pass II will determine if the end is the last statement.
-            if (st == Instruction::ST_End) return;
+        // Skip comments and blank lines.
+        if (st == Instruction::ST_Comment)
+        {
+            continue;
+        }
 
-            // Labels can only be on machine language and assembler language
-            // instructions.  So, skip other instruction types. We can do better/
-            if (st == Instruction::ST_Comment)
+        // If the instruction has a label, record it and its location in the symbol table.
+        if (m_inst.isLabel())
+        {
+            cout << "Adding label: " << m_inst.GetLabel() << " at location: " << loc << endl;
+            m_symtab.AddSymbol(m_inst.GetLabel(), loc);
+        }
+
+        // Handle assembler directives.
+        if (st == Instruction::ST_AssemblerInstr)
+        {
+            if (m_inst.GetOpCode() == "ds")
             {
+                int reserve = stoi(m_inst.GetOperand());
+                loc += reserve;
+
+                cout << "Reserved " << reserve << " locations (ds directive), new loc: " << loc << endl;
                 continue;
             }
-            // If the instruction has a label, record it and its location in the
-            // symbol table.
-            if (m_inst.isLabel()) {
-                cout << "Adding label: " << m_inst.GetLabel() << " at location: " << loc << endl;
-                m_symtab.AddSymbol(m_inst.GetLabel(), loc);
+            if (m_inst.GetOpCode() == "dc")
+            {
+                cout << "Assigned value to location: " << loc << " (dc directive)" << endl;
+                loc++;
+                continue;
             }
-            // Compute the location of the next instruction.
-            loc = m_inst.LocationNextInstruction(loc);
         }
+
+        // Compute the location of the next instruction.
+        loc = m_inst.LocationNextInstruction(loc);
     }
+}
+
 
 // Pass II will read over the source file for a second time, generating machine code and checks for
 // unresolved symbols
@@ -116,16 +127,19 @@ void Assembler::PassII() {
 
     // Rewind the file for Pass II
     m_facc.rewind();
-    cout << "Testing if file starts reading from the beginning..." << endl;
+    //cout << "Testing if file starts reading from the beginning..." << endl;
 
     string line;
+    /*
     if (m_facc.GetNextLine(line)) {
         cout << "First line: " << line << endl;
     }
     else {
         cout << "Failed to read the first line after rewinding." << endl;
     }
-
+    */
+    /*
+    
     // Temporary tests for ConvertToOpcode
     cout << "Testing ConvertToOpcode..." << std::endl;
     cout << "Opcode for ADD: " << ConvertToOpcode("ADD") << std::endl;
@@ -138,10 +152,11 @@ void Assembler::PassII() {
     cout << "Parsed opcode: " << m_inst.GetOpCode() << std::endl;
     m_inst.ParseInstruction("STORE Y");
     cout << "Parsed opcode: " << m_inst.GetOpCode() << std::endl;
-
+    */
 
     // Test for the symbol table returning correct address values
     
+    /*
     cout << "Testing GetAddress..." << endl;
     string testOperand = "x"; // Replace with actual operand expected to exist in the symbol table
     int address = m_symtab.GetAddress(testOperand);
@@ -149,7 +164,7 @@ void Assembler::PassII() {
     testOperand = "y";
     address = m_symtab.GetAddress(testOperand);
     cout << "Address retrieved for operand '" << testOperand << "': " << address << endl;
-
+    */
     
     int loc = m_startingLocation;  // Initialize to the start location from Pass I
 
@@ -188,8 +203,8 @@ void Assembler::PassII() {
             }  
 
 
+            
             /*
-
             // Generate the machine instruction in the form: <opcode><operand>
             int machineInstruction = GenerateMachineCode(opcode, operand);
 
@@ -199,10 +214,13 @@ void Assembler::PassII() {
 
             loc = m_inst.LocationNextInstruction(loc);
 
-            */
             
+            */
         }
+
+        
     }
+    
 }
 
 
