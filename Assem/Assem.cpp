@@ -19,7 +19,7 @@ int main( int argc, char *argv[] )
     assem.PassII( );
     
     // Run the emulator on the Quack3200 program that was generated in Pass II.
-    // VICVICassem.RunProgramInEmulator();
+    assem.RunProgramInEmulator();
    
     // Terminate indicating all is well.  If there is an unrecoverable error, the 
     // program will terminate at the point that it occurred with an exit(1) call.

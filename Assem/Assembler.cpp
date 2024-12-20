@@ -6,6 +6,7 @@
 #include "Assembler.h"
 #include "Instruction.h"
 #include "Errors.h"
+#include "Emulator.h"
 
 string TrimString(const string& str) {
     size_t first = str.find_first_not_of(" \t");
@@ -160,6 +161,8 @@ void Assembler::PassII() {
     cout << "Translation of Program:\n" << endl;
     cout << std::format("{:<10} {:<10} {:<40}", "Location", "Contents", "Original Statement") << endl;
 
+
+
     while (true) {
         string line;
         if (!m_facc.GetNextLine(line)) break;
@@ -255,6 +258,12 @@ void Assembler::PassII() {
         }
 
         int machineInstruction = opcodeValue * 10000 + operandValue;
+
+        if (!m_emul.insertMemory(loc, machineInstruction)) {
+            Errors::RecordError("Failed to insert memory at location: " + to_string(loc));
+            cout << "Error: Failed to insert memory at location -> " << loc << endl;
+            continue;
+        }
         cout << std::format("{:<10} {:<10} {:<40}", loc, std::format("{:06}", machineInstruction), originalLine) << endl;
 
         loc++;
