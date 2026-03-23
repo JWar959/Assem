@@ -45,7 +45,7 @@ Assembler/
 -- How to Build and Run -- 
 
 1. Clone the repository:
-git clone https://github.com/JWar959/assembler-project.git
+git clone https://github.com/JWar959/Assem.git
 cd assembler-project
 
 2. Compile the project:
